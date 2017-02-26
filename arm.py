@@ -14,15 +14,15 @@ BOUNDS = {
 
 
 class Arm(object):
-    def __init__(self, fps, velocity_scale=200):
+    def __init__(self, fps, velocity_scale=200, dry_run=False):
         """
         fps: the frames per second that set_multi_velocity must be called to
         keep smooth motion.
         velocity_scale: convert unitless range (-1, 1) to velocity in
         microseconds / second
         """
-        self.dev = Device(mode='t')
-        self.dev.baudrate = 9600
+        # self.dev = Device(mode='t')
+        # self.dev.baudrate = 9600
 
         self.positions = {i: BOUNDS[i][2] for i in BOUNDS}
 
@@ -32,6 +32,8 @@ class Arm(object):
         # position scale is the velocity in (microseconds / second) / FPS to get
         # microseconds per frame
         self.position_scale = velocity_scale / self.fps
+
+        self.dry_run = dry_run
 
     def _bound_position(self, axis, position):
         if position > BOUNDS[axis][1]:
@@ -57,7 +59,10 @@ class Arm(object):
         print('position=', position)
         print('speed=', speed)
         print('time=', time)
-        # return
+
+        if self.dry_run:
+            return
+
         if speed:
             self.dev.write(
                 '#{axis}P{position}S{speed}\r'.format(
@@ -118,6 +123,9 @@ class Arm(object):
 
         set_multi_velocity must be called once every self.fps
         """
+        if self.dry_run:
+            return
+
         self.set_multi_position(
             {
                 axis: self.positions[axis] + (velocity * self.position_scale)
