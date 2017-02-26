@@ -1,6 +1,5 @@
 import time
 import random
-import numpy as np
 from pylibftdi import Device
 
 # min, max, home
@@ -187,23 +186,6 @@ if __name__ == '__main__':
                 a[0] -= 50
                 arm.set_position(0, a[0], 200)
 
-    # for i in range(10):
-    #     go_random()
-    #     time.sleep(5)
-
-    # go_home()
-
-    #     i = 0
-    #     while True:
-    #         i += np.pi / 10
-    #         pos = np.sin(i)*100 + 1600
-    #         print pos
-    #         set_position(3, pos, speed=300)
-    #         time.sleep(0.1)
-
-    # for i in np.arange(BOUNDS[2][0], BOUNDS[2][1], 1):
-    #     set_position(2, i, speed=200)
-    #     print i
     except KeyboardInterrupt as e:
         pass
 
