@@ -7,7 +7,7 @@ controller.
 The interface is provided with a class Arm.  For now, check out the code
 to see what methods are available.  A simple example:
 
-```
+```python
 arm = Arm(fps=10, velocity_scale=200)
 arm.go_home()
 # set arm axes `3` to position `2000`
