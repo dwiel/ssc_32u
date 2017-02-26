@@ -6,14 +6,14 @@ from pylibftdi import Device
 BOUNDS = {
     0: [1250, 1950, 1600],
     1: [850, 2500, 1000],
-    7: [1200, 2500, 1200],
+    2: [1200, 2500, 1200],
     3: [700, 2500, 1900],  # 1700 is center
-    4: [1200, 2450, 1200],
+    # 4: [1200, 2450, 1200],
 }
 
 
 class Arm(object):
-    def __init__(self, fps, velocity_scale=200, dry_run=False):
+    def __init__(self, fps, velocity_scale=200, dry_run=False, verbose=False):
         """
         fps: the frames per second that set_multi_velocity must be called to
         keep smooth motion.
@@ -23,7 +23,8 @@ class Arm(object):
         # self.dev = Device(mode='t')
         # self.dev.baudrate = 9600
 
-        self.positions = {i: BOUNDS[i][2] for i in BOUNDS}
+        self.default_speed = 600
+        self.positions = self._home_position()
 
         self.fps = fps
         self.velocity_scale = velocity_scale
@@ -33,6 +34,10 @@ class Arm(object):
         self.position_scale = velocity_scale / self.fps
 
         self.dry_run = dry_run
+        self.verbose = verbose
+
+    def _home_position(self):
+        return {i: BOUNDS[i][2] for i in BOUNDS}
 
     def _bound_position(self, axis, position):
         if position > BOUNDS[axis][1]:
@@ -49,15 +54,15 @@ class Arm(object):
         """
 
         self.positions[axis] = self._bound_position(axis, position)
-        print(self.positions)
 
         if speed is None and time is None:
-            speed = 600
+            speed = self.default_speed
 
-        print('axis=', axis)
-        print('position=', position)
-        print('speed=', speed)
-        print('time=', time)
+        if self.verbose:
+            print('axis=', axis)
+            print('position=', position)
+            print('speed=', speed)
+            print('time=', time)
 
         if self.dry_run:
             return
@@ -75,7 +80,7 @@ class Arm(object):
                 )
             )
 
-    def set_multi_position(self, positions, speeds, scaled=False):
+    def set_positions(self, positions, speeds=None, scaled=False):
         if scaled:
             positions = {
                 axis: self.scaled_position(axis, position)
@@ -85,19 +90,25 @@ class Arm(object):
         for axis in positions:
             self.positions[axis] = self._bound_position(axis, positions[axis])
 
-        if positions:
+        if speeds is None:
+            speeds = {axis: self.default_speed for axis in positions}
+
+        if self.verbose:
             print('positions', positions)
             print('speeds   ', speeds)
+
+        if self.dry_run:
             return
-            self.dev.write(
-                ''.join(
-                    '#{axis}P{pos}S{speed}'.format(
-                        axis=axis,
-                        pos=positions[axis],
-                        speed=speeds[axis],
-                    ) for axis in positions
-                ) + '\r'
-            )
+
+        self.dev.write(
+            ''.join(
+                '#{axis}P{pos}S{speed}'.format(
+                    axis=axis,
+                    pos=positions[axis],
+                    speed=speeds[axis],
+                ) for axis in positions
+            ) + '\r'
+        )
 
     def scaled_position(self, axis, position):
         if position < 0 or position > 1:
@@ -107,25 +118,29 @@ class Arm(object):
 
         return BOUNDS[axis][0] + position * (BOUNDS[axis][1] - BOUNDS[axis][0])
 
-    def set_scaled_position(self, axis, position, speed=600):
+    def set_scaled_position(self, axis, position, speed=None):
         self.set_position(
             axis, self.scaled_position(axis, position), speed=speed
         )
 
-    def set_relative_position(self, axis, position_delta, speed=600):
+    def set_relative_position(self, axis, position_delta, speed=None):
         self.positions[axis] += position_delta
         self.set_position(axis, self.positions[axis], speed=speed)
 
-    def set_multi_velocity(self, velocities):
+    def set_velocities(self, velocities):
         """
         Set velocity of all servos in arm.
 
         set_multi_velocity must be called once every self.fps
         """
-        if self.dry_run:
-            return
+        if set(velocities.keys()) != set(self.positions.keys()):
+            raise ValueError((
+                'velocities.keys must match self.positions.keys:\n'
+                '  velocities.keys(): {}\n'
+                '  self.position.keys(): {}\n'
+            ).format(velocities.keys(), self.positions.keys()))
 
-        self.set_multi_position(
+        self.set_positions(
             {
                 axis: self.positions[axis] + (velocity * self.position_scale)
                 for axis, velocity in velocities.items()
@@ -144,12 +159,8 @@ class Arm(object):
             speed=max(abs(velocity) * self.velocity_scale, 5)
         )
 
-        # velocity *= 25
-        # self.set_position(axis, self.positions[axis] + velocity, time=2)
-
     def go_home(self):
-        for axis in BOUNDS:
-            self.set_position(axis, BOUNDS[axis][2])
+        self.set_positions(self._home_position())
 
     def go_random(self):
         for axis in BOUNDS:
