@@ -9,7 +9,10 @@ to see what methods are available.  A simple example:
 
 ```python
 arm = Arm(fps=10, velocity_scale=200)
+
+# put all arm axes in their `home` position
 arm.go_home()
+
 # set arm axes `3` to position `2000`
 arm.set_position(axis=3, 2000)
 
