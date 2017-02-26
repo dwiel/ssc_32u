@@ -1,6 +1,8 @@
 This package is intended to provide some useful abstraction over the low
-level pylibftdi interface for controlling robot arms driven by the
-SSC-32U controller sold by robotshop.com
+level [pylibftdi](https://pypi.python.org/pypi/pylibftdi) interface for
+controlling robot arms driven by the
+[SSC-32U](http://www.lynxmotion.com/p-1032-ssc-32u-usb-servo-controller.aspx)
+controller.
 
 The interface is provided with a class Arm.  For now, check out the code
 to see what methods are available.  A simple example:
