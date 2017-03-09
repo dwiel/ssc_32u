@@ -8,14 +8,15 @@ Show everything we can pull off the joystick
 """
 import pygame
 import time
-from arm import Arm
+import math
+from ssc_32u.arm import Arm
 
 # Define some colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
 FPS = 10
-DRY_RUN = True
+DRY_RUN = False
 
 pygame.init()
 
@@ -35,18 +36,34 @@ clock = pygame.time.Clock()
 pygame.joystick.init()
 
 # Get ready to print
-arm = Arm(FPS, dry_run=DRY_RUN)
+arm = Arm(FPS, dry_run=DRY_RUN, verbose=True, velocity_scale=1000)
 arm.go_home()
 
 # is this entire mapping something ROS would help with?
 BUTTON_GO_HOME = 9
 # map from joystick axes to arm axes
-AXES_MAP = {
+JOYSTICK_AXES_MAP = {
     0: 3,
     1: 0,
     3: -2,
     4: 1,
 }
+# map from joystick axes to logical axes
+LOGICAL_AXES_MAP = {
+    0: 0,
+    1: 1,
+    3: 2,
+    4: 3,
+}
+
+
+def sign(x):
+    if sign > 0:
+        return 1
+    elif sign == 0:
+        return 0
+    else:
+        return -1
 
 
 def interact_with_arm():
@@ -55,15 +72,16 @@ def interact_with_arm():
         joystick = pygame.joystick.Joystick(joystick_id)
         joystick.init()
 
-        arm.set_multi_velocity({
-            joystick_axis: math.copy_sign(
-                joystick.get_axis(joystick_axis),
-                arm_axis,
+        arm.set_velocities({
+            LOGICAL_AXES_MAP[joystick_axis]: (
+                joystick.get_axis(joystick_axis) *
+                sign(arm_axis)
             )
-            for joystick_axis, arm_axis in AXES_MAP.items()
+            for joystick_axis, arm_axis in JOYSTICK_AXES_MAP.items()
         })
 
         # start button triggers go home
+        buttons = joystick.get_numbuttons()
         for button_id in range(buttons):
             if button_id == BUTTON_GO_HOME and joystick.get_button(button_id):
                 arm.go_home()
@@ -141,7 +159,8 @@ while not done:
         if event.type == pygame.JOYBUTTONUP:
             print("Joystick button released.")
 
-    display_joystick_status()
+    # display_joystick_status()
+    interact_with_arm()
 
     # Limit to 60 frames per second
     clock.tick(FPS)

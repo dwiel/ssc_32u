@@ -6,7 +6,8 @@ from pylibftdi import Device
 BOUNDS = {
     0: [1250, 1950, 1600],
     1: [850, 2500, 1000],
-    2: [1200, 2500, 1200],
+    # 2: [1200, 2500, 1200],
+    2: [550, 1000, 600],
     3: [700, 2500, 1900],  # 1700 is center
     # 4: [1200, 2450, 1200],
 }
@@ -20,8 +21,9 @@ class Arm(object):
         velocity_scale: convert unitless range (-1, 1) to velocity in
         microseconds / second
         """
-        # self.dev = Device(mode='t')
-        # self.dev.baudrate = 9600
+        if not dry_run:
+            self.dev = Device(mode='t')
+            self.dev.baudrate = 9600
 
         self.default_speed = 600
         self.positions = self._home_position()
@@ -88,7 +90,8 @@ class Arm(object):
             }
 
         for axis in positions:
-            self.positions[axis] = self._bound_position(axis, positions[axis])
+            positions[axis] = self._bound_position(axis, positions[axis])
+            self.positions[axis] = positions[axis]
 
         if speeds is None:
             speeds = {axis: self.default_speed for axis in positions}
@@ -140,13 +143,16 @@ class Arm(object):
                 '  self.position.keys(): {}\n'
             ).format(velocities.keys(), self.positions.keys()))
 
+        if not any(v != 0 for v in velocities.values()):
+            return
+
         self.set_positions(
             {
                 axis: self.positions[axis] + (velocity * self.position_scale)
                 for axis, velocity in velocities.items()
             },
             {
-                axis: max(abs(velocity * self.velocity_scale), 5)
+                axis: max(abs(velocity * self.velocity_scale), 100)
                 for axis, velocity in velocities.items()
             },
         )
@@ -189,7 +195,6 @@ if __name__ == '__main__':
         import sys
         while True:
             c = sys.stdin.read(1)
-            print(c)
             if c == 'a':
                 a[0] += 50
                 arm.set_position(0, a[0], 200)
