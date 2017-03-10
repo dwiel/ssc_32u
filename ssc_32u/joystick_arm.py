@@ -11,10 +11,6 @@ import time
 import math
 from ssc_32u.arm import Arm
 
-# Define some colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
 FPS = 10
 DRY_RUN = False
 
