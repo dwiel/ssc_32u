@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='ssc_32u',
-    version='0.1',
+    version='0.2',
     description='simple interface to robot arms '
                 'controlled with SSC-32U controller',
     url='http://github.com/dwiel/ssc_32u',
