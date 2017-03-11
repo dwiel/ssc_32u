@@ -1,0 +1,11 @@
+*.pyc
+*.egg-info/
+
+# vi
+*.swp
+*.swo
+*.swm
+*.swn
+
+# virtualenv
+venv
