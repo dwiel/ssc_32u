@@ -1,0 +1,10 @@
+FROM ssc_32u
+
+ADD joystick_requirements.txt /tmp/joystick_requirements.txt
+RUN pip install -r /tmp/joystick_requirements.txt
+
+ADD . /root/ssc_32u
+WORKDIR /root/ssc_32u
+RUN pip install -e .
+
+CMD python /root/ssc_32u/ssc_32u/joystick_arm.py
