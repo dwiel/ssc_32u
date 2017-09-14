@@ -85,7 +85,7 @@ class Arm(object):
     def set_positions(self, positions, speeds=None, scaled=False):
         if scaled:
             positions = {
-                axis: self.scaled_position(axis, position)
+                axis: self._scaled_to_absoltuion_position(axis, position)
                 for axis, position in positions.items()
             }
 
@@ -113,7 +113,18 @@ class Arm(object):
             ) + '\r'
         )
 
-    def scaled_position(self, axis, position):
+    def _scaled_position(self, axis, position):
+        return (position - BOUNDS[axis][0]) / (
+            BOUNDS[axis][1] - BOUNDS[axis][0]
+        )
+
+    def scaled_positions(self):
+        return [
+            self._scaled_position(axis, position)
+            for axis, position in self.positions.items()
+        ]
+
+    def _scaled_to_absoltuion_position(self, axis, position):
         if position < 0 or position > 1:
             raise ValueError((
                 'position expected to be within 0 and 1.  found: {}'
@@ -123,7 +134,9 @@ class Arm(object):
 
     def set_scaled_position(self, axis, position, speed=None):
         self.set_position(
-            axis, self.scaled_position(axis, position), speed=speed
+            axis,
+            self._scaled_to_absoltuion_position(axis, position),
+            speed=speed
         )
 
     def set_relative_position(self, axis, position_delta, speed=None):
