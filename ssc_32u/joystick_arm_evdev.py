@@ -68,14 +68,17 @@ def display_measured_fps():
         print(100 / (new_clock - old_clock))
         old_clock = new_clock
 
-print dev.capabilities(verbose=True)
+print(dev.capabilities(verbose=True))
 
 # -------- Main Program Loop -----------
 import threading
 
+
 class JoystickThread(threading.Thread):
     def __init__(self):
         super(JoystickThread, self).__init__()
+
+        # {joystick_axis: velocity (-1.0, 1.0)}
         self.state = {}
 
     def run(self):
