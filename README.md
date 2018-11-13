@@ -1,4 +1,4 @@
-This package is intended to provide some useful abstraction over the low
+This package is intended to abstract over the low
 level [pylibftdi](https://pypi.python.org/pypi/pylibftdi) interface for
 controlling robot arms driven by the
 [SSC-32U](http://www.lynxmotion.com/p-1032-ssc-32u-usb-servo-controller.aspx)
